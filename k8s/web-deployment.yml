@@ -1,0 +1,46 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: web-deployment
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: web
+  template:
+    metadata:
+      labels:
+        app: web
+    spec:
+      containers:
+        - name: php-apache
+          image: <tu-imagen-en-dockerhub>
+          ports:
+            - containerPort: 80
+            - containerPort: 443
+          env:
+            - name: ALLOW_OVERRIDE
+              value: "true"
+          volumeMounts:
+            - name: ssl-certs
+              mountPath: /etc/apache2/ssl
+      volumes:
+        - name: ssl-certs
+          secret:
+            secretName: web-ssl-secret
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: web-service
+spec:
+  type: LoadBalancer
+  selector:
+    app: web
+  ports:
+    - protocol: TCP
+      port: 80
+      targetPort: 80
+    - protocol: TCP
+      port: 443
+      targetPort: 443
